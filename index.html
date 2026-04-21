@@ -254,7 +254,7 @@ const brightgas55 = document.getElementById('brightgas55');
 ========================= */
 async function getPublicIP() {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000); // ⏱️ max 5 detik
+  const timeout = setTimeout(() => controller.abort(), 3000); // ⏱️ 3 detik max
 
   try {
     const res = await fetch("https://api.ipify.org?format=json", {
@@ -272,12 +272,9 @@ async function getPublicIP() {
     return data.ip;
 
   } catch (err) {
-    throw new Error("❌ Tidak bisa mendeteksi IP (cek jaringan)");
+    throw new Error("❌ Wajib aktifkan jaringan internet (IP tidak terdeteksi)");
   }
 }
-/* =========================
-EVENT
-========================= */
 
 brightgasYN.addEventListener('change', () => {
   brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
@@ -354,7 +351,15 @@ document.getElementById('ledgerForm').addEventListener('submit', async function 
     brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
   }
 
-  const userIP = await getPublicIP(); // 🔥 ambil IP
+let userIP;
+
+try {
+  userIP = await getPublicIP();
+} catch (err) {
+  loadingOverlay.classList.add('hidden');
+  alert(err.message);
+  return; // ❌ STOP submit
+}
 
   navigator.geolocation.getCurrentPosition(async posGeo => {
 
