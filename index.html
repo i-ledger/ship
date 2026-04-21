@@ -253,8 +253,15 @@ const brightgas55 = document.getElementById('brightgas55');
 🔥 TAMBAHAN: AMBIL IP USER
 ========================= */
 async function getPublicIP() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000); // ⏱️ max 5 detik
+
   try {
-    const res = await fetch("https://api.ipify.org?format=json");
+    const res = await fetch("https://api.ipify.org?format=json", {
+      signal: controller.signal
+    });
+
+    clearTimeout(timeout);
 
     if (!res.ok) throw new Error("Gagal ambil IP");
 
@@ -265,7 +272,7 @@ async function getPublicIP() {
     return data.ip;
 
   } catch (err) {
-    throw new Error("❌ Tidak bisa mendeteksi IP. Gunakan jaringan internet!");
+    throw new Error("❌ Tidak bisa mendeteksi IP (cek jaringan)");
   }
 }
 /* =========================
