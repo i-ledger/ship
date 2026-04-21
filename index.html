@@ -163,9 +163,6 @@
 
 <script src="config.js"></script>
 <script src="kamera-kanvas.js"></script>
-
-<!-- (SEMUA HTML LU TETAP, GA DIUBAH) -->
-
 <script>
 
 
@@ -313,9 +310,6 @@ closePopupBtn.addEventListener('click', () => {
   popupNotif.classList.add('opacity-0', 'pointer-events-none');
 });
 
-/* =========================
-SUBMIT
-========================= */
 
 document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
 
@@ -361,7 +355,7 @@ try {
         fotoBukti: window.fotoBuktiBase64 || "",
         brightgas, retur, returFoto: window.fotoReturBase64 || "",
         lokasi,
-        ip: userIP // 🔥 TAMBAHAN
+        ip: userIP 
       }
     };
 
