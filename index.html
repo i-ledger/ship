@@ -255,13 +255,19 @@ const brightgas55 = document.getElementById('brightgas55');
 async function getPublicIP() {
   try {
     const res = await fetch("https://api.ipify.org?format=json");
+
+    if (!res.ok) throw new Error("Gagal ambil IP");
+
     const data = await res.json();
-    return data.ip || "UNKNOWN";
-  } catch {
-    return "UNKNOWN";
+
+    if (!data.ip) throw new Error("IP tidak valid");
+
+    return data.ip;
+
+  } catch (err) {
+    throw new Error("❌ Tidak bisa mendeteksi IP. Gunakan jaringan internet!");
   }
 }
-
 /* =========================
 EVENT
 ========================= */
