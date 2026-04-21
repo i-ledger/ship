@@ -169,9 +169,6 @@
 
 <script>
 
-/* =========================
-AKTIFKAN NOTIFICATION
-========================= */
 
 if ("Notification" in window) {
   Notification.requestPermission().then(function(permission){
@@ -179,9 +176,6 @@ if ("Notification" in window) {
   });
 }
 
-/* =========================
-SERVICE WORKER PWA
-========================= */
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
@@ -221,10 +215,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   });
 });
 
-/* =========================
-SCRIPT APLIKASI
-========================= */
-
 const API_NAMA = API_ENDPOINT + '?action=nama';
 const API_POS = API_ENDPOINT + '?action=pos';
 const SUBMIT_URL = API_ENDPOINT;
@@ -249,9 +239,6 @@ const brightgasContainer = document.getElementById('brightgasContainer');
 const brightgas12 = document.getElementById('brightgas12');
 const brightgas55 = document.getElementById('brightgas55');
 
-/* =========================
-🔥 TAMBAHAN: AMBIL IP USER
-========================= */
 async function getPublicIP() {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 3000); // ⏱️ 3 detik max
@@ -263,16 +250,16 @@ async function getPublicIP() {
 
     clearTimeout(timeout);
 
-    if (!res.ok) throw new Error("Gagal ambil IP");
+    if (!res.ok) throw new Error("Gagal ambil Jaringan");
 
     const data = await res.json();
 
-    if (!data.ip) throw new Error("IP tidak valid");
+    if (!data.ip) throw new Error("tidak valid");
 
     return data.ip;
 
   } catch (err) {
-    throw new Error("❌ Wajib aktifkan jaringan internet (IP tidak terdeteksi)");
+    throw new Error("❌ Aktifkan Jaringan Lokal Anda)");
   }
 }
 
