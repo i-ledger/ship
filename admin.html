@@ -30,7 +30,7 @@ $('#xlsx').onclick=()=>{
   const h=['Waktu','PT','Driver/Kernet','Pangkalan','Jumlah 3Kg','Retur','Bright Gas','Pemilik di lokasi','Foto Pangkalan','Foto Pemilik','Foto Retur','Lokasi'];
   const q=c=>`"${String(c??'').replace(/"/g,'""')}"`;
   const xlsx='\ufeff'+[h,...view.map(r=>[fmt(r.timestamp),r.pos,r.nama,r.uraian,r.nominal,r.retur,r.brightgas,r.pembayaran,r.foto,r.buktitransfer,r.buktiretur,r.lokasi])].map(r=>r.map(q).join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([xlsx],{type:'text/xslx;charset=utf-8'}));a.download='rekap_pengiriman.xlsx';a.click();URL.revokeObjectURL(a.href);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([xlsx],{type:'text/xlsx;charset=utf-8'}));a.download='rekap_pengiriman.xlsx';a.click();URL.revokeObjectURL(a.href);
 };
 (async()=>{S.spin(1);try{
   const d=await S.api(getAPIUrl('transaksi'));if(!Array.isArray(d))throw new Error('Format data tidak dikenal');all=d;
