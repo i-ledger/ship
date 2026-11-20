@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Daftar PT · i-Shipping</title><link rel="icon" href="pertamina-logoicon.png"><link rel="stylesheet" href="style.css"></head><body>
+<main class="auth"><form class="card brand" id="f">
+<img src="pertamina-logo.png" alt="i-Shipping">
+<div class="f"><label for="email">Email PT</label><input id="email" type="email" required autocomplete="email"></div>
+<div class="f"><label for="pw">Kata sandi</label><input id="pw" type="password" required autocomplete="new-password"></div>
+<div class="f"><label for="pt">Nama perusahaan</label><input id="pt" required></div>
+<div class="f"><label for="uid">ID unik (contoh: 123456)</label><input id="uid" required inputmode="numeric"></div>
+<button class="btn block" id="go">Daftarkan PT</button><div class="msg" id="msg" role="alert"></div>
+<p class="mut" style="text-align:center;margin-top:14px">Sudah punya akun? <a href="login.html">Masuk</a></p>
+</form></main>
+<script src="config.js"></script><script>
+const g=i=>document.getElementById(i).value.trim();
+document.getElementById('f').onsubmit=async e=>{e.preventDefault();
+const m=document.getElementById('msg'),b=document.getElementById('go'),d={email:g('email'),password:g('pw'),nama_pt:g('pt'),id_unik:g('uid')};
+m.className='msg ok';m.textContent='Mendaftarkan…';b.disabled=true;
+try{const r=await(await fetch(API_ENDPOINT,{method:'POST',body:new URLSearchParams({action:'registerPT',...d})})).json();
+if(r.status==='success'){localStorage.setItem('loggedIn','true');localStorage.setItem('id_spreadsheet',r.id_spreadsheet);localStorage.setItem('nama_pt',d.nama_pt);localStorage.setItem('email',d.email);localStorage.setItem('id_unik',d.id_unik);location.href='dashboard.html';return}
+m.className='msg';m.textContent=r.message||'Pendaftaran gagal.'}catch{m.className='msg';m.textContent='Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi.'}
+b.disabled=false};
+</script></body></html>

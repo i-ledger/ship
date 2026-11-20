@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rekap pengiriman · i-Shipping</title><link rel="icon" href="pertamina-logoicon.png"><link rel="stylesheet" href="style.css"></head><body>
+<main class="wrap">
+<div class="stats"><div class="stat"><b id="sN">0</b><span>Pengiriman</span></div><div class="stat"><b id="sQ">0</b><span>Total 3 Kg</span></div><div class="stat"><b id="sR">0</b><span>Total retur</span></div></div>
+<section class="card" style="margin-bottom:16px"><div class="grid g2">
+<div><label for="from">Dari tanggal</label><input type="date" id="from"></div><div><label for="to">Sampai tanggal</label><input type="date" id="to"></div>
+<div><label for="fd">Driver/kernet</label><select id="fd"><option value="">Semua</option></select></div>
+<div><label for="fp">Pangkalan</label><select id="fp"><option value="">Semua</option></select></div>
+</div><div class="row end" style="margin-top:14px"><button class="btn ghost" id="csv">Unduh CSV</button></div></section>
+<div class="tw"><table class="stack"><thead><tr><th>Waktu</th><th>PT</th><th>Driver/kernet</th><th>Pangkalan</th><th>3 Kg</th><th>Retur</th><th>Bright Gas</th><th>Pemilik ada</th><th>Foto pangkalan</th><th>Foto pemilik</th><th>Foto retur</th><th>Lokasi</th></tr></thead><tbody id="tb"></tbody></table></div>
+<div class="row" style="justify-content:center;margin-top:16px"><button class="btn ghost hidden" id="more">Tampilkan lagi</button></div>
+</main>
+<script src="config.js"></script><script src="app.js"></script><script>
+(()=>{if(!S.guard())return;S.bar('Rekap pengiriman');
+const PAGE=40;let all=[],view=[],shown=0;
+const fid=u=>{const m=String(u||'').match(/[?&]id=([\w-]+)|\/d\/([\w-]+)/);return m&&(m[1]||m[2])};
+const thumb=u=>{const i=fid(u);return i?`<a href="https://drive.google.com/uc?export=view&id=${i}" target="_blank" rel="noopener"><img class="thumb" loading="lazy" decoding="async" width="70" height="56" alt="Foto" src="https://drive.google.com/thumbnail?id=${i}&sz=w160"></a>`:'-'};
+const p2=n=>String(n).padStart(2,'0');
+const fmt=t=>{const d=new Date(t);return isNaN(d)?'-':`${p2(d.getDate())}/${p2(d.getMonth()+1)}/${d.getFullYear()} ${p2(d.getHours())}:${p2(d.getMinutes())}`};
+const num=x=>Number(String(x||0).replace(/\D/g,''))||0;
+const row=r=>`<tr><td data-l="Waktu">${fmt(r.timestamp)}</td><td data-l="PT">${esc(r.pos)||'-'}</td><td data-l="Driver">${esc(r.nama)||'-'}</td><td data-l="Pangkalan">${esc(r.uraian)||'-'}</td><td data-l="3 Kg">${esc(r.nominal)||0}</td><td data-l="Retur">${esc(r.retur)||0}</td><td data-l="Bright Gas">${esc(r.brightgas)||0}</td><td data-l="Pemilik ada">${esc(r.pembayaran)||'-'}</td><td data-l="Foto pangkalan">${thumb(r.foto)}</td><td data-l="Foto pemilik">${thumb(r.buktitransfer)}</td><td data-l="Foto retur">${thumb(r.buktiretur)}</td><td data-l="Lokasi">${/^https?:\/\//.test(r.lokasi||'')?`<a href="${esc(r.lokasi)}" target="_blank" rel="noopener">Lihat peta</a>`:'-'}</td></tr>`;
+function more(){$('#tb').insertAdjacentHTML('beforeend',view.slice(shown,shown+PAGE).map(row).join(''));shown=Math.min(shown+PAGE,view.length);$('#more').classList.toggle('hidden',shown>=view.length)}
+function apply(){
+  const f=$('#from').value?new Date($('#from').value+'T00:00:00'):null,t=$('#to').value?new Date($('#to').value+'T23:59:59'):null,d=$('#fd').value,p=$('#fp').value;
+  view=all.filter(r=>{const x=new Date(r.timestamp);return(!f||x>=f)&&(!t||x<=t)&&(!d||r.nama===d)&&(!p||r.uraian===p)});
+  $('#sN').textContent=view.length;$('#sQ').textContent=view.reduce((a,r)=>a+num(r.nominal),0).toLocaleString('id-ID');$('#sR').textContent=view.reduce((a,r)=>a+num(r.retur),0).toLocaleString('id-ID');
+  $('#tb').innerHTML=view.length?'':'<tr><td colspan="12" class="empty">Tidak ada pengiriman pada filter ini.</td></tr>';shown=0;more();
+}
+['from','to','fd','fp'].forEach(i=>$('#'+i).onchange=apply);$('#more').onclick=more;
+$('#csv').onclick=()=>{
+  const h=['Waktu','PT','Driver/Kernet','Pangkalan','Jumlah 3Kg','Retur','Bright Gas','Pemilik di lokasi','Foto Pangkalan','Foto Pemilik','Foto Retur','Lokasi'];
+  const q=c=>`"${String(c??'').replace(/"/g,'""')}"`;
+  const csv='\ufeff'+[h,...view.map(r=>[fmt(r.timestamp),r.pos,r.nama,r.uraian,r.nominal,r.retur,r.brightgas,r.pembayaran,r.foto,r.buktitransfer,r.buktiretur,r.lokasi])].map(r=>r.map(q).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='rekap_pengiriman.csv';a.click();URL.revokeObjectURL(a.href);
+};
+(async()=>{S.spin(1);try{
+  const d=await S.api(getAPIUrl('transaksi'));if(!Array.isArray(d))throw new Error('Format data tidak dikenal');all=d;
+  const today=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);$('#from').value=$('#to').value=today;
+  const opt=k=>'<option value="">Semua</option>'+[...new Set(d.map(r=>r[k]).filter(Boolean))].sort().map(v=>`<option>${esc(v)}</option>`).join('');
+  $('#fd').innerHTML=opt('nama');$('#fp').innerHTML=opt('uraian');apply();
+}catch(e){S.toast('Data gagal dimuat: '+e.message,false)}S.spin(0)})();
+})();
+</script></body></html>

@@ -1,423 +1,57 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>i-Shipping SES_GS</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4f46e5">
-  <style>
-    .spinner {
-      border: 4px solid rgba(99, 102, 241, 0.2);
-      border-top-color: #6366f1;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    canvas { display: none; }
-    /* Backdrop blur dan overlay loading */
-    #loadingOverlay {
-      backdrop-filter: blur(3px);
-      background-color: rgba(0,0,0,0.4);
-    }
-  </style>
-</head>
-<body class="bg-gradient-to-br from-indigo-100 to-white min-h-screen flex items-center justify-center p-6 relative font-sans">
-
-  <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-    <div class="spinner"></div>
-  </div>
-
-  <!-- Popup Notif -->
-  <div id="popupNotif" 
-       class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-              bg-white rounded-3xl shadow-2xl p-8 max-w-sm text-center
-              opacity-0 pointer-events-none transition-opacity duration-300 z-60">
-    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto mb-4 h-14 w-14 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-    <h3 class="text-xl font-semibold text-gray-900 mb-2">Barang sudah terkirim</h3>
-    <p class="text-gray-600 mb-6">Terimakasih</p>
-    <button id="closePopupBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 py-2 font-semibold transition">Tutup</button>
-  </div>
-
-  <!-- Tombol Ke Dashboard -->
-  <a href="https://ship-6rr.pages.dev/masterdataishiping.html" 
-     class="absolute top-6 right-6 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl shadow-lg font-semibold transition">
-    Ke Dashboard
-  </a>
-
-  <!-- Form utama -->
-  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-10">
-    <h2 class="text-4xl font-extrabold text-indigo-700 mb-8 text-center tracking-tight">i-Shipping SES_GS</h2>
-    <form id="ledgerForm" class="space-y-8">
-
-      <div>
-        <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">Driver/Kernet</label>
-        <select id="nama" required class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
-      </div>
-
-      <div>
-        <label for="uraian" class="block text-sm font-medium text-gray-700 mb-2">Nama Pangkalan</label>
-        <input list="uraianList" id="uraian" required 
-               class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        <datalist id="uraianList"></datalist>
-      </div>
-
-      <div>
-        <label for="pos" class="block text-sm font-medium text-gray-700 mb-2">Nama PT</label>
-        <input type="text" id="pos" readonly 
-               class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-xl p-4 text-lg cursor-not-allowed" />
-      </div>
-
-      <div>
-        <label for="nominal" class="block text-sm font-medium text-gray-700 mb-2">Jumlah Pengiriman LPG 3Kg</label>
-        <input type="text" id="nominal" required 
-               class="mt-1 block w-full border border-gray-300 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-      </div>
-
-      <div>
-        <label for="brightgasYN" class="block text-sm font-medium text-gray-700 mb-2">Apakah Driver Mengirim Bright Gas?</label>
-        <select id="brightgasYN" 
-                class="mt-1 block w-full border border-gray-300 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="Tidak">Tidak</option>
-          <option value="Ya">Ya</option>
-        </select>
-      </div>
-
-      <div id="brightgasContainer" class="hidden space-y-6 mt-4">
-        <div>
-          <label for="brightgas12" class="block text-sm font-medium text-gray-700 mb-2">12 KG</label>
-          <input type="number" id="brightgas12" min="0" value="0" 
-                 class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
-        <div>
-          <label for="brightgas55" class="block text-sm font-medium text-gray-700 mb-2">5.5 KG</label>
-          <input type="number" id="brightgas55" min="0" value="0" 
-                 class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-        </div>
-      </div>
-
-      <!-- Kamera Pangkalan -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pangkalan</label>
-        <video id="videoNota" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
-        <canvas id="canvasNota" class="hidden"></canvas>
-        <button id="ambilNota" type="button" onclick="takeSnapshot('Nota')" 
-                class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
-          Ambil Foto
-        </button>
-        <img id="previewNota" class="w-full mt-4 hidden rounded-xl border shadow" />
-      </div>
-
-      <div>
-        <label for="retur" class="block text-sm font-medium text-gray-700 mb-2">Retur</label>
-        <input type="number" id="retur" required min="0" value="0" 
-               class="mt-1 block w-full border border-gray-300 rounded-xl shadow-sm p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-      </div>
-
-      <div id="returFotoContainer" class="hidden">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Retur</label>
-        <video id="videoRetur" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
-        <canvas id="canvasRetur" class="hidden"></canvas>
-        <button id="ambilRetur" type="button" onclick="takeSnapshot('Retur')" 
-                class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
-          Ambil Foto
-        </button>
-        <img id="previewRetur" class="w-full mt-4 hidden rounded-xl border shadow" />
-      </div>
-
-      <div>
-        <label for="pembayaran" class="block text-sm font-medium text-gray-700 mb-2">Apakah Pemilik Pangkalan berada dilokasi Pangkalan?</label>
-        <select id="pembayaran" 
-                class="mt-1 block w-full border border-gray-300 rounded-xl p-4 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="Tidak">Tidak</option>
-          <option value="Ya">Ya</option>
-        </select>
-      </div>
-
-      <div id="buktiTransferContainer" class="hidden">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Pemilik + Pangkalan</label>
-        <video id="videoBukti" autoplay playsinline class="w-full h-64 object-cover rounded-xl shadow-lg border"></video>
-        <canvas id="canvasBukti" class="hidden"></canvas>
-        <button id="ambilBukti" type="button" onclick="takeSnapshot('Bukti')" 
-                class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl shadow-lg font-semibold transition">
-          Ambil Foto
-        </button>
-        <img id="previewBukti" class="w-full mt-4 hidden rounded-xl border shadow" />
-      </div>
-
-      <button type="submit" 
-              class="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 hover:from-indigo-700 hover:via-indigo-800 hover:to-indigo-900 
-                     text-white font-extrabold py-4 rounded-3xl shadow-xl text-xl transition">
-        Submit
-      </button>
-    </form>
-  </div>
-
-<script src="config.js"></script>
-<script src="kamera-kanvas.js"></script>
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Form pengiriman · i-Shipping</title><link rel="icon" href="pertamina-logoicon.png"><link rel="stylesheet" href="style.css"></head><body>
+<script>if(/github\.io$/.test(location.hostname))location.replace("https://i-shipping.pages.dev/")</script>
+<main class="wrap narrow">
+<div id="warn" class="warn hidden">Perangkat ini belum terhubung ke PT. <a href="login.html">Masuk dulu</a> agar daftar driver dan pangkalan muncul.</div>
+<form id="f" autocomplete="off">
+<section class="card"><h2 id="pt">Pengiriman</h2>
+<div class="f"><label for="nama">Driver/Kernet</label><select id="nama" required><option value="">Memuat…</option></select></div>
+<div class="f"><label for="uraian">Nama pangkalan</label><input list="ul" id="uraian" required placeholder="Ketik untuk mencari"><datalist id="ul"></datalist></div>
+<div class="f"><label for="pos">Nama PT</label><input id="pos" readonly></div>
+<div class="f"><label for="nominal">Jumlah pengiriman LPG 3 Kg</label><input id="nominal" required inputmode="numeric"></div>
+<div class="f"><label for="bgYN">Driver mengirim Bright Gas?</label><select id="bgYN"><option>Tidak</option><option>Ya</option></select></div>
+<div id="bgBox" class="grid g2 hidden"><div class="f"><label for="bg12">12 Kg (tabung)</label><input type="number" id="bg12" min="0" value="0" inputmode="numeric"></div><div class="f"><label for="bg55">5,5 Kg (tabung)</label><input type="number" id="bg55" min="0" value="0" inputmode="numeric"></div></div>
+</section>
+<section class="card"><h2>Foto pangkalan</h2>
+<div class="cam"><video id="videoNota" autoplay playsinline muted></video><canvas id="canvasNota"></canvas><img id="previewNota" class="hidden" alt="Foto pangkalan"></div>
+<button type="button" id="ambilNota" class="btn block" onclick="takeSnapshot('Nota')">Ambil foto</button></section>
+<section class="card"><h2>Retur</h2>
+<div class="f"><label for="retur">Jumlah retur</label><input type="number" id="retur" min="0" value="0" required inputmode="numeric"></div>
+<div id="returBox" class="hidden"><label>Foto retur</label><div class="cam"><video id="videoRetur" autoplay playsinline muted></video><canvas id="canvasRetur"></canvas><img id="previewRetur" class="hidden" alt="Foto retur"></div>
+<button type="button" id="ambilRetur" class="btn block" onclick="takeSnapshot('Retur')">Ambil foto</button></div></section>
+<section class="card"><h2>Konfirmasi pemilik</h2>
+<div class="f"><label for="pembayaran">Pemilik pangkalan ada di lokasi?</label><select id="pembayaran"><option>Tidak</option><option>Ya</option></select></div>
+<div id="buktiBox" class="hidden"><label>Foto pemilik dan pangkalan</label><div class="cam"><video id="videoBukti" autoplay playsinline muted></video><canvas id="canvasBukti"></canvas><img id="previewBukti" class="hidden" alt="Foto pemilik"></div>
+<button type="button" id="ambilBukti" class="btn block" onclick="takeSnapshot('Bukti')">Ambil foto</button></div></section>
+<button class="btn block" id="go" style="margin-top:16px;min-height:52px;font-size:1.05rem">Simpan pengiriman</button>
+</form></main>
+<script src="config.js"></script><script src="app.js"></script><script src="kamera-kanvas.js"></script>
 <script>
-
-
-if ("Notification" in window) {
-  Notification.requestPermission().then(function(permission){
-    console.log("Notification permission:",permission);
-  });
-}
-
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js')
-  .then(() => {
-    console.log("Service Worker aktif");
-    Notification.requestPermission().then(permission=>{
-      console.log("Permission:", permission);
-    });
-  })
-  .catch(err => console.log("SW Error:", err));
-}
-
-let deferredPrompt;
-
-window.addEventListener('beforeinstallprompt', (e) => {
+S.bar('Form pengiriman',{back:false,extra:'<a class="btn ghost sm" href="dashboard.html">Dashboard</a>'});
+if(!localStorage.getItem('id_spreadsheet'))$('#warn').classList.remove('hidden');
+$('#pt').textContent=localStorage.getItem('nama_pt')||'Pengiriman';
+const nama=$('#nama'),uraian=$('#uraian'),pos=$('#pos'),nominal=$('#nominal'),bgYN=$('#bgYN');let map={};
+S.api(getAPIUrl('nama')).then(d=>{nama.innerHTML='<option value="" disabled selected>Pilih nama</option>'+d.map(n=>`<option>${esc(n)}</option>`).join('')}).catch(()=>S.toast('Daftar driver gagal dimuat',false));
+S.api(getAPIUrl('pos')).then(d=>{d.forEach(r=>map[r.uraian]=r.pos);$('#ul').innerHTML=d.map(r=>`<option value="${esc(r.uraian)}">`).join('')}).catch(()=>S.toast('Daftar pangkalan gagal dimuat',false));
+uraian.oninput=()=>pos.value=map[uraian.value]||'';
+nominal.oninput=e=>{const v=e.target.value.replace(/\D/g,'');e.target.value=v?new Intl.NumberFormat('id-ID').format(v):''};
+bgYN.onchange=()=>$('#bgBox').classList.toggle('hidden',bgYN.value!=='Ya');
+$('#f').onsubmit=async e=>{
   e.preventDefault();
-  deferredPrompt = e;
-
-  const installBtn = document.createElement('button');
-  installBtn.textContent = "Install i-Shipping";
-  installBtn.style.position = "fixed";
-  installBtn.style.bottom = "20px";
-  installBtn.style.right = "20px";
-  installBtn.style.padding = "10px 20px";
-  installBtn.style.background = "#4f46e5";
-  installBtn.style.color = "#fff";
-  installBtn.style.border = "none";
-  installBtn.style.borderRadius = "8px";
-  installBtn.style.zIndex = 1000;
-
-  document.body.appendChild(installBtn);
-
-  installBtn.addEventListener('click', async () => {
-    deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    installBtn.remove();
-  });
-});
-
-const API_NAMA = API_ENDPOINT + '?action=nama';
-const API_POS = API_ENDPOINT + '?action=pos';
-const SUBMIT_URL = API_ENDPOINT;
-
-const namaEl = document.getElementById('nama');
-const uraianEl = document.getElementById('uraian');
-const posEl = document.getElementById('pos');
-const nominalEl = document.getElementById('nominal');
-const returEl = document.getElementById('retur');
-const pembayaran = document.getElementById('pembayaran');
-
-const previewNota = document.getElementById('previewNota');
-const previewBukti = document.getElementById('previewBukti');
-const previewRetur = document.getElementById('previewRetur');
-
-const loadingOverlay = document.getElementById('loadingOverlay');
-const popupNotif = document.getElementById('popupNotif');
-const closePopupBtn = document.getElementById('closePopupBtn');
-
-const brightgasYN = document.getElementById('brightgasYN');
-const brightgasContainer = document.getElementById('brightgasContainer');
-const brightgas12 = document.getElementById('brightgas12');
-const brightgas55 = document.getElementById('brightgas55');
-
-async function getPublicIP() {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 3000); // ⏱️ 3 detik max
-
-  try {
-    const res = await fetch("https://api.ipify.org?format=json", {
-      signal: controller.signal
-    });
-
-    clearTimeout(timeout);
-
-    if (!res.ok) throw new Error("Gagal ambil Jaringan");
-
-    const data = await res.json();
-
-    if (!data.ip) throw new Error("tidak valid");
-
-    return data.ip;
-
-  } catch (err) {
-    throw new Error("❌ Aktifkan Jaringan Lokal Anda");
-  }
-}
-
-brightgasYN.addEventListener('change', () => {
-  brightgasContainer.classList.toggle('hidden', brightgasYN.value !== 'Ya');
-});
-
-fetch(API_NAMA).then(r => r.json()).then(data => {
-  data.forEach(n => {
-    const o = document.createElement('option');
-    o.value = o.textContent = n;
-    namaEl.appendChild(o);
-  });
-});
-
-let uraianMap = {};
-fetch(API_POS).then(r => r.json()).then(data => {
-  data.forEach(row => {
-    uraianMap[row.uraian] = row.pos;
-    const o = document.createElement('option');
-    o.value = row.uraian;
-    document.getElementById('uraianList').appendChild(o);
-  });
-});
-
-uraianEl.addEventListener('input', () => {
-  posEl.value = uraianMap[uraianEl.value] || '';
-});
-
-nominalEl.addEventListener('input', e => {
-  const v = e.target.value.replace(/\D/g, '');
-  e.target.value = new Intl.NumberFormat('id-ID').format(v);
-});
-
-returEl.addEventListener('input', () => {
-  const val = parseInt(returEl.value) || 0;
-  document.getElementById('returFotoContainer').classList.toggle('hidden', val <= 0);
-});
-
-pembayaran.addEventListener('change', () => {
-  document.getElementById('buktiTransferContainer').classList.toggle('hidden', pembayaran.value !== 'Ya');
-});
-
-function showPopup() {
-  popupNotif.classList.remove('opacity-0', 'pointer-events-none');
-  setTimeout(() => {
-    popupNotif.classList.add('opacity-0', 'pointer-events-none');
-  }, 4000);
-}
-
-closePopupBtn.addEventListener('click', () => {
-  popupNotif.classList.add('opacity-0', 'pointer-events-none');
-});
-
-
-document.getElementById('ledgerForm').addEventListener('submit', async function (e) {
-
-  e.preventDefault();
-  loadingOverlay.classList.remove('hidden');
-
-  const nama = namaEl.value;
-  const uraian = uraianEl.value;
-  const pos = posEl.value;
-  const nominal = nominalEl.value.replace(/\D/g, '');
-  const retur = parseInt(returEl.value) || 0;
-  const pembayaranVal = pembayaran.value;
-
-  let brightgas = "0";
-
-  if (brightgasYN.value === "Ya") {
-    const val12 = parseInt(brightgas12.value) || 0;
-    const val55 = parseInt(brightgas55.value) || 0;
-    brightgas = `${val12} Tbg (12kg) || ${val55} Tbg (5,5 KG)`;
-  }
-
-let userIP;
-
-try {
-  userIP = await getPublicIP();
-} catch (err) {
-  loadingOverlay.classList.add('hidden');
-  alert(err.message);
-  return; // ❌ STOP submit
-}
-
-  navigator.geolocation.getCurrentPosition(async posGeo => {
-
-    const lokasi = `https://www.google.com/maps?q=${posGeo.coords.latitude},${posGeo.coords.longitude}`;
-
-    const payload = {
-      action: 'addTransaksi',
-      sheet: 'Transaksi',
-      payload: {
-        nama, uraian, pos, nominal,
-        pembayaran: pembayaranVal,
-        fotoNota: window.fotoNotaBase64,
-        fotoBukti: window.fotoBuktiBase64 || "",
-        brightgas, retur, returFoto: window.fotoReturBase64 || "",
-        lokasi,
-        ip: userIP 
-      }
-    };
-
-    try {
-
-      const res = await fetch(SUBMIT_URL,{
-        method:'POST',
-        headers:{'Content-Type':'text/plain'},
-        body:JSON.stringify(payload)
-      });
-
-      const result = await res.json();
-
-      if(result.status==="success"){
-        showPopup();
-        this.reset();
-        previewNota.classList.add('hidden');
-        previewBukti.classList.add('hidden');
-        previewRetur.classList.add('hidden');
-      }
-
-    } catch(err){
-      alert("❌ Error "+err.message);
-    }
-
-    loadingOverlay.classList.add('hidden');
-
-  });
-
-});
-
-/* =========================
-NOTIF
-========================= */
-
-let lastData = 0;
-
-async function checkTransaksiBaru(){
-try{
-const res = await fetch(API_ENDPOINT+"?action=transaksi");
-const data = await res.json();
-
-if(data.length > lastData){
-const terbaru = data[data.length-1];
-
-if(Notification.permission==="granted"){
-new Notification("🚚 Pengiriman LPG Baru",{
-body: terbaru.nama+" | "+terbaru.uraian+" | "+terbaru.pos+" | "+terbaru.nominal+" tabung",
-icon:"icon.png"
-});
-}
-}
-
-lastData = data.length;
-
-}catch(e){
-console.log(e);
-}
-}
-
-setInterval(checkTransaksiBaru,2000);
-
-</script>
-</body>
-</html>
+  const retur=parseInt($('#retur').value)||0,bayar=$('#pembayaran').value;
+  if(!pos.value)return S.toast('Pilih pangkalan dari daftar',false);
+  if(!window.fotoNotaBase64)return S.toast('Foto pangkalan wajib diambil',false);
+  if(retur>0&&!window.fotoReturBase64)return S.toast('Foto retur wajib diambil',false);
+  if(bayar==='Ya'&&!window.fotoBuktiBase64)return S.toast('Foto pemilik wajib diambil',false);
+  const btn=$('#go');btn.disabled=true;S.spin(1);
+  const done=()=>{btn.disabled=false;S.spin(0)};
+  navigator.geolocation.getCurrentPosition(async g=>{
+    const brightgas=bgYN.value==='Ya'?`${parseInt($('#bg12').value)||0} Tbg (12kg) || ${parseInt($('#bg55').value)||0} Tbg (5,5 KG)`:'0';
+    try{
+      const r=await S.api(getAPIUrl('submit'),{action:'addTransaksi',sheet:'Transaksi',payload:{nama:nama.value,uraian:uraian.value,pos:pos.value,nominal:nominal.value.replace(/\D/g,''),pembayaran:bayar,fotoNota:window.fotoNotaBase64,fotoBukti:window.fotoBuktiBase64||'',brightgas,retur,returFoto:window.fotoReturBase64||'',lokasi:`https://www.google.com/maps?q=${g.coords.latitude},${g.coords.longitude}`}});
+      if(r.status!=='success')throw new Error(r.message||'Gagal menyimpan');
+      S.toast('Pengiriman tersimpan. Terima kasih!');$('#f').reset();pos.value='';$('#bgBox').classList.add('hidden');resetCameras();scrollTo({top:0,behavior:'smooth'});
+    }catch(err){S.toast('Gagal: '+err.message,false)}
+    done();
+  },()=>{S.toast('Lokasi tidak terbaca. Aktifkan izin lokasi lalu coba lagi',false);done()},{timeout:12000,maximumAge:60000});
+};
+</script></body></html>
