@@ -5,7 +5,7 @@
 <div><label for="from">Dari tanggal</label><input type="date" id="from"></div><div><label for="to">Sampai tanggal</label><input type="date" id="to"></div>
 <div><label for="fd">Driver/kernet</label><select id="fd"><option value="">Semua</option></select></div>
 <div><label for="fp">Pangkalan</label><select id="fp"><option value="">Semua</option></select></div>
-</div><div class="row end" style="margin-top:14px"><button class="btn ghost" id="csv">Unduh CSV</button></div></section>
+</div><div class="row end" style="margin-top:14px"><button class="btn ghost" id="xlsx">Unduh Excel</button></div></section>
 <div class="tw"><table class="stack"><thead><tr><th>Waktu</th><th>PT</th><th>Driver/kernet</th><th>Pangkalan</th><th>3 Kg</th><th>Retur</th><th>Bright Gas</th><th>Pemilik ada</th><th>Foto pangkalan</th><th>Foto pemilik</th><th>Foto retur</th><th>Lokasi</th></tr></thead><tbody id="tb"></tbody></table></div>
 <div class="row" style="justify-content:center;margin-top:16px"><button class="btn ghost hidden" id="more">Tampilkan lagi</button></div>
 </main>
@@ -26,11 +26,11 @@ function apply(){
   $('#tb').innerHTML=view.length?'':'<tr><td colspan="12" class="empty">Tidak ada pengiriman pada filter ini.</td></tr>';shown=0;more();
 }
 ['from','to','fd','fp'].forEach(i=>$('#'+i).onchange=apply);$('#more').onclick=more;
-$('#csv').onclick=()=>{
+$('#xlsx').onclick=()=>{
   const h=['Waktu','PT','Driver/Kernet','Pangkalan','Jumlah 3Kg','Retur','Bright Gas','Pemilik di lokasi','Foto Pangkalan','Foto Pemilik','Foto Retur','Lokasi'];
   const q=c=>`"${String(c??'').replace(/"/g,'""')}"`;
-  const csv='\ufeff'+[h,...view.map(r=>[fmt(r.timestamp),r.pos,r.nama,r.uraian,r.nominal,r.retur,r.brightgas,r.pembayaran,r.foto,r.buktitransfer,r.buktiretur,r.lokasi])].map(r=>r.map(q).join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='rekap_pengiriman.csv';a.click();URL.revokeObjectURL(a.href);
+  const xlsx='\ufeff'+[h,...view.map(r=>[fmt(r.timestamp),r.pos,r.nama,r.uraian,r.nominal,r.retur,r.brightgas,r.pembayaran,r.foto,r.buktitransfer,r.buktiretur,r.lokasi])].map(r=>r.map(q).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([xlsx],{type:'text/xslx;charset=utf-8'}));a.download='rekap_pengiriman.xlsx';a.click();URL.revokeObjectURL(a.href);
 };
 (async()=>{S.spin(1);try{
   const d=await S.api(getAPIUrl('transaksi'));if(!Array.isArray(d))throw new Error('Format data tidak dikenal');all=d;
